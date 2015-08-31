@@ -1,4 +1,3 @@
-# Small script to show PostgreSQL and Pyscopg together
 import psycopg2
 
 
