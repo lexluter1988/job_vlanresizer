@@ -1,4 +1,4 @@
-class Nets(object):
+class Net(object):
     def __init__(self):
         pass
 
