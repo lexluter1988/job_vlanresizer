@@ -45,9 +45,17 @@ class Subnet(object):
 
 class Ve(object):
     def __init__(self):
-        pass
+        self.veid = veid
+
 
     def get_ve(self):
+        ve = {'id': veid,
+              'uuid': uuid,
+              'hn_id': hn_id,
+              'customer_id': customer_id,
+              'is_lb': is_lb,
+              'technology': technology,
+              'private_ip': private_ip}
         pass
 
     def change_ve_address(self):
@@ -58,9 +66,9 @@ class Customer(object):
     def __init__(self):
         pass
 
-    def get_customer(self):
-        pass
-
-    def get_customers_ve(self):
+    def get_customer(self, cus_id=None):
+        customer = {'id': cus_id,
+                    'ves': {},
+                    'vlans': {}}
         pass
 

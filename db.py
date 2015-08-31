@@ -1,7 +1,7 @@
 import psycopg2
 
 
-class Dbutils(object):
+class Db(object):
 
         def __init__(self, connection=None):
                 self.connection = connection
