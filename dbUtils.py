@@ -10,8 +10,15 @@ class Dbutils(object):
         def connect(self):
                 try:
                     connection = psycopg2.connect("dbname='im' user='postgres'")
-                except:
-                    print "I am unable to connect to the database"
+                    cur = connection.cursor()
+                    cur.execute("""INSERT INTO vlans(label,customer_id,version) values('VLAN for customer666','1287565','1')""")
+                    connection.commit()
+                    cur.close()
+                    connection.close()
+
+                except psycopg2.Error as e:
+                    print e.pgerror
+                    return 1
                 print "I am connected"
                 return connection
 
