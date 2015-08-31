@@ -1,4 +1,5 @@
 import psycopg2
+import psycopg2.extras
 
 
 class Dbutils(object):
@@ -22,12 +23,15 @@ class Dbutils(object):
 
     def get_all_customer(self):
         try:
-            connection = psycopg2.connect("dbname='im' user='postgres'")
+            connection = psycopg2.connect("dbname='im' user='postgres'",
+                                          connection_factory=psycopg2.extras.RealDictConnection)
             cur = connection.cursor()
-            cur.execute("""SELECT name FROM ve where customer_id = 5
+            cur.execute("""SELECT name,id,uuid,customer_id FROM ve WHERE customer_id = 1282584
                         """)
             rows = cur.fetchall()
-            print rows
+            cur.close()
+            connection.close()
+            print rows[0]['name'], rows[0]['id'], rows[0]['customer_id'], rows[0]['uuid']
         except psycopg2.Error as e:
             print e.pgerror
             return 1
