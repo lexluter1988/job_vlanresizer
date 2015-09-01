@@ -175,11 +175,11 @@ LOCAL_SUBNET_ID=SUBNET_ID
 parse_ip_range
 
 psql im -F ' ' -c "SELECT id,uuid,hn_id,private_ip FROM ve where customer_id = $CUSTOMER_ID" --set ON_ERROR_STOP=on --no-align --quiet --tuples-only |
-while read VE_ID UUID HNODE_ID IP;
+while read VE_ID UUID HN_UUID IP;
 do
   echo "assigning for $VE_ID IP address = $oct1.$oct2.$oct3.$((oct4+$i))/8"
   psql im -c "UPDATE ve set private_ip ='$oct1.$oct2.$oct3.$(($oct4+$i))/8' WHERE id = $VE_ID"
-  HNAME=`psql im -c "SELECT name FROM hn WHERE id = $HNODE_ID" --no-align --quiet --tuples-only`
+  HNAME=`psql im -c "SELECT name FROM hn WHERE uuid = '$HN_UUID'" --no-align --quiet --tuples-only`
   echo "prlctl set $UUID --device-set venet0 --ipdel all" >> $HNAME.sh
   echo "prlctl set $UUID --device-set venet0 --ipadd $IP" >> $HNAME.sh
   let i=i+1
@@ -202,8 +202,9 @@ i=1
 count=1
 
 psql im -F ' ' -c "SELECT id,hn_id FROM ve where customer_id = $CUSTOMER_ID" --set ON_ERROR_STOP=on --no-align --quiet --tuples-only |
-while read VE_ID HNODE_ID;
+while read VE_ID HN_UUID;
 do
+  HNODE_ID=`psql im -c "SELECT id FROM hn WHERE uuid = '$HN_UUID'" --no-align --quiet --tuples-only`
   RESULT=`psql im -c "SELECT exists(SELECT 1 FROM vlans_advertised WHERE vlan_id = $VLAN_ID AND hnode_id = $HNODE_ID)" --no-align --quiet --tuples-only`
   if [ "$RESULT" == "f" ]
       then
@@ -220,9 +221,9 @@ done
 ########## STEP #1 - DELETING OF OLD DB DATA AND RECREATING OF VLANS     	          ######################
 ################################################################################################################
 
-purge_db
-sleep 10
-create_subnets $1 $2
+#purge_db
+#sleep 10
+#create_subnets $1 $2
 
 ################################################################################################################
 ########## STEP #2 - GETTING LIST OF CUSTOMERS                           	          ######################
