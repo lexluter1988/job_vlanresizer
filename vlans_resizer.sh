@@ -1,6 +1,7 @@
 #!/bin/bash
 ################################################################################################################
 ########## FUNCTION TO PURDE EXISTING VLAN,SUBNETS,VLANS_AVERTISED, AND RESTART SEQUENCES ######################
+################################################################################################################
 
 function purge_db {
 
@@ -21,12 +22,11 @@ psql im << EOF
 EOF
 
 }
-################################################################################################################
-################################################################################################################
 
 ################################################################################################################
 ########## FUNCTION TO RECREATE SUBNETS WITH NEW MASK AND CAPACITY			  ######################
 ########## it took 2 input parameter from console, ip and mask, like 10.1.1.1 30 ###############################
+################################################################################################################
 
 function create_subnets {
 
@@ -61,11 +61,7 @@ EOF
 }
 
 ################################################################################################################
-################################################################################################################
-
-
-################################################################################################################
-########## SIMPLE FUNCTION TO CREATE VLAN, INLCUDED IN MORE COMPLICATED FUNCTION	  ######################
+########## SIMPLE FUNCTION TO CREATE VLAN, INCLUDED IN MORE COMPLICATED FUNCTION	      ######################
 ################################################################################################################
 
 function create_vlan {
@@ -73,12 +69,9 @@ function create_vlan {
 psql im -c "INSERT INTO vlans (label,customer_id,version) VALUES('VLAN for customer#$CUSTOMER_ID',$CUSTOMER_ID,1) RETURNING id" --no-align --quiet --tuples-only
 }
 
-################################################################################################################
-################################################################################################################
-
 
 ################################################################################################################
-########## FUNCTION TO PERFORM ADVERTISING AND VLAN CREATION WHEN ONLY 1 VLAN NEEDED      ######################
+########## FUNCTION TO PERFORM ADVERTISING AND VLAN CREATION                              ######################
 ################################################################################################################
 
 
@@ -109,16 +102,12 @@ let SUBNET_ID=SUBNET_ID+1
 }
 
 ################################################################################################################
-################################################################################################################
-
-
-################################################################################################################
 ########## FUNCTION TO PERFORM ADVERTISING AND VLAN CREATION WHEN FEW VLANS NEEDED        ######################
 ################################################################################################################
 
 function create_multiple_vlans {
 
-numVlan=$(($veNum/4))
+numSubnets=$(($veNum/4))
 rest=$(($veNum%4))
 capacity=$((4-$rest))
 
@@ -134,23 +123,20 @@ case "$rest" in
 esac
 
 VLAN_ID=`create_vlan`
+IP_RANGE=`update_subnet 0 f0`
 update_private_ip
 echo "updating vlans_advertised table $VLAN_ID $HNODE_ID"
 vlan_advertisement
 
-while [ "$numVlan" -ge 0 ]
+while [ "$numSubnets" -ge 1 ]
 do
-  IP_RANGE=`update_subnet 0 f0`
   let SUBNET_ID=SUBNET_ID+1
-  VLAN_ID=`create_vlan`
-  let numVlan=numVlan-1
+  IP_RANGE=`update_subnet 0 f0`
+  let numSubnets=numSubnets-1
 done
 
 IP_RANGE=`update_subnet $capacity $assigned`
-let SUBNET_ID=SUBNET_ID+1
 }
-################################################################################################################
-################################################################################################################
 
 
 ################################################################################################################
@@ -163,17 +149,12 @@ psql im -c "UPDATE subnets SET vlan_id=$VLAN_ID,available=$1,assigned=decode('$2
 }
 
 ################################################################################################################
+########## FUNCTION TO PARSE IP RANGE                                                     ######################
 ################################################################################################################
 
-
-################################################################################################################
-########## FUNCTION TO UPDATE PRIVATE IP-S OF VE-S                                        ######################
-################################################################################################################
-
-function update_private_ip {
-
+function parse_ip_range {
+let i=0
 x=`echo $IP_RANGE | sed 's/[/].*$//'`
-i=0
 oct1=${x%%.*}
 x=${x#*.*}
 oct2=${x%%.*}
@@ -182,28 +163,34 @@ oct3=${x%%.*}
 x=${x#*.*}
 oct4=${x%%.*}
 
-psql im -c "SELECT id FROM ve where customer_id = $CUSTOMER_ID" --set ON_ERROR_STOP=on --no-align --quiet --tuples-only |
-while read VE_ID ;
+}
+################################################################################################################
+########## FUNCTION TO UPDATE PRIVATE IP-S OF VE-S                                        ######################
+################################################################################################################
+
+function update_private_ip {
+
+LOCAL_SUBNET_ID=SUBNET_ID
+
+parse_ip_range
+
+psql im -F ' ' -c "SELECT id,uuid,hn_id,private_ip FROM ve where customer_id = $CUSTOMER_ID" --set ON_ERROR_STOP=on --no-align --quiet --tuples-only |
+while read VE_ID UUID HNODE_ID IP;
 do
   echo "assigning for $VE_ID IP address = $oct1.$oct2.$oct3.$((oct4+$i))/8"
   psql im -c "UPDATE ve set private_ip ='$oct1.$oct2.$oct3.$(($oct4+$i))/8' WHERE id = $VE_ID"
-  UUID=`psql im -c "SELECT uuid FROM ve where id=$VE_ID" --no-align --quiet --tuples-only`
-  HNODE_ID=`psql im -c "SELECT id from hn WHERE uuid IN(SELECT hn_id FROM ve WHERE customer_id = $CUSTOMER_ID limit 1)" --no-align --quiet --tuples-only`
-  IP=`psql im -c "SELECT private_ip FROM ve where id=$VE_ID" --no-align --quiet --tuples-only`
   HNAME=`psql im -c "SELECT name FROM hn WHERE id = $HNODE_ID" --no-align --quiet --tuples-only`
   echo "prlctl set $UUID --device-set venet0 --ipdel all" >> $HNAME.sh
   echo "prlctl set $UUID --device-set venet0 --ipadd $IP" >> $HNAME.sh
   let i=i+1
     if [ "$i" == 4 ]
        then
-       let oct3=oct3+1
+       let LOCAL_SUBNET_ID=LOCAL_SUBNET_ID+1
+       IP_RANGE=`psql im -c "SELECT ip FROM subnets WHERE id = $LOCAL_SUBNET_ID" --set ON_ERROR_STOP=on --no-align --quiet --tuples-only`
+       parse_ip_range
     fi
 done
 }
-
-################################################################################################################
-################################################################################################################
-
 
 ################################################################################################################
 ########## FUNCTION TO ADVERTISE VLAN DEPENDS ON COUNT OF CUSTOMERS VES     	          ######################
@@ -214,19 +201,9 @@ function vlan_advertisement {
 i=1
 count=1
 
-psql im -c "SELECT id FROM ve where customer_id = $CUSTOMER_ID" --set ON_ERROR_STOP=on --no-align --quiet --tuples-only |
-while read VE_ID ;
-do  
-
-  if [ "$count" == 5 ]
-     then 
-     let count=1
-  fi 
-  UUID=`psql im -c "SELECT uuid FROM ve where id=$VE_ID" --no-align --quiet --tuples-only`
-  HNODE_ID=`psql im -c "SELECT id from hn WHERE uuid IN(SELECT hn_id FROM ve WHERE id = $VE_ID)" --no-align --quiet --tuples-only`
-  IP=`psql im -c "SELECT private_ip FROM ve where id=$VE_ID" --no-align --quiet --tuples-only`
-  HNAME=`psql im -c "SELECT name FROM hn WHERE id = $HNODE_ID" --no-align --quiet --tuples-only`
-
+psql im -F ' ' -c "SELECT id,hn_id FROM ve where customer_id = $CUSTOMER_ID" --set ON_ERROR_STOP=on --no-align --quiet --tuples-only |
+while read VE_ID HNODE_ID;
+do
   RESULT=`psql im -c "SELECT exists(SELECT 1 FROM vlans_advertised WHERE vlan_id = $VLAN_ID AND hnode_id = $HNODE_ID)" --no-align --quiet --tuples-only`
   if [ "$RESULT" == "f" ]
       then
@@ -234,29 +211,7 @@ do
       let count=count+1
   else
       let count=count+1
-      psql im -c "UPDATE vlans_advertised set subscriptions=$count WHERE vlan_id=$VLAN_ID AND hnode_id=$HNODE_ID"      
-  fi  
-
-  let i=i+1  
-
-  if [ "$i" == 5 ]
-     then       
-     let VLAN_ID=VLAN_ID+1
-  fi
-
-  if [ "$i" == 9 ]
-     then
-     let VLAN_ID=VLAN_ID+1
-  fi
-
-  if [ "$i" == 13 ]
-     then       
-     let VLAN_ID=VLAN_ID+1
-  fi    
-
-  if [ "$i" == 17 ]
-     then       
-     let VLAN_ID=VLAN_ID+1
+      psql im -c "UPDATE vlans_advertised set subscriptions=$count WHERE vlan_id=$VLAN_ID AND hnode_id=$HNODE_ID"
   fi
 done
 }
@@ -299,8 +254,7 @@ do
            VLAN_ID=`create_vlan`
            echo "creating first vlan $CUSTOMER_ID $VLAN_ID"
 
-   # now we can update subnets table depends on numbers of vlan for customer 
-           update_subnet 4 00
+   # no need to update subnets when 0 VM-s for customer
            echo "this is 0 VM-s subnet, not need to update ve table"
            let SUBNET_ID=SUBNET_ID+1
 		;;
