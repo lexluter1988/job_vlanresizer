@@ -5,9 +5,18 @@ class Customer(object):
         pass
 
     def get_customer(self, cus_id=None):
-        customer = {'id': cus_id,
+        customer = [{'id': cus_id,
                     'ves': {},
-                    'vlans': {}}
+                    'vlans': {}}]
+
+customer = [{'id': '',
+            'ves': {},
+            'vlans': {}}]
 
 instance = Dbutils()
-instance.get_all_customer()
+ve = instance.get_all_customer()
+for row in ve:
+    customer.append({'id': row['uuid'],
+                    'ves': row['hn_id'],
+                    'vlans': row['name']})
+print customer
