@@ -7,9 +7,9 @@ function purge_db {
 
 echo "creating backup of IM db"
 
-NOW=$(date +"%Y-%m-%d")
+#NOW=$(date +"%Y-%m-%d")
 
-pg_dump -Fc im > $NOW.im.dump
+#pg_dump -Fc im > $NOW.im.dump
 
 echo "first step, deleting vlans, vlans_avertised, subnets content"
 
@@ -108,8 +108,11 @@ let SUBNET_ID=SUBNET_ID+1
 function create_multiple_vlans {
 
 numSubnets=$(($veNum/4))
+echo "number of subnets will be: $numSubnets"
 rest=$(($veNum%4))
+echo "rest will be: $rest"
 capacity=$((4-$rest))
+echo "capacity will be: $capacity"
 
 case "$rest" in 
    "0") assigned=f0
@@ -121,16 +124,17 @@ case "$rest" in
    "3") assigned=e0
 	;;
 esac
-
+echo "create_multiple_vlans: subnet id is:$SUBNET_ID"
 VLAN_ID=`create_vlan`
 IP_RANGE=`update_subnet 0 f0`
 update_private_ip
-echo "updating vlans_advertised table $VLAN_ID $HNODE_ID"
+echo "create_multiple_vlans: updating vlans_advertised table $VLAN_ID $HNODE_ID"
 vlan_advertisement
 
 while [ "$numSubnets" -ge 1 ]
 do
   let SUBNET_ID=SUBNET_ID+1
+  echo "create_multiple_vlans: subnet id is:$SUBNET_ID"
   IP_RANGE=`update_subnet 0 f0`
   let numSubnets=numSubnets-1
 done
@@ -221,9 +225,9 @@ done
 ########## STEP #1 - DELETING OF OLD DB DATA AND RECREATING OF VLANS     	          ######################
 ################################################################################################################
 
-#purge_db
-#sleep 10
-#create_subnets $1 $2
+purge_db
+sleep 10
+create_subnets $1 $2
 
 ################################################################################################################
 ########## STEP #2 - GETTING LIST OF CUSTOMERS                           	          ######################
