@@ -36,11 +36,11 @@ do
 ########## STEP #4 - TWO CASES: 1 VLAN NEEDED OR N-VLANS                                  ######################
 ################################################################################################################
 
-      [1-4]*)
+      [1-4]|4)
            #create_one_vlan
            echo "CASE 1-4 $CUSTOMER_ID has: $veNum VEs"
 		;;
-      [5-20]*)
+      [5-9]|1[0-9]|20)
            echo "CASE 5-20 $CUSTOMER_ID has: $veNum VEs"
            #create_multiple_vlans
 		;;
