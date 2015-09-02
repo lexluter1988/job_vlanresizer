@@ -1,3 +1,4 @@
+#!/bin/bash
 echo "assuming we assigning subnets from the first one"
 
 #SUBNET_ID=1
@@ -7,13 +8,14 @@ echo "getting all id-s of customers"
 psql im -c "SELECT id FROM customers" --set ON_ERROR_STOP=on --no-align --quiet --tuples-only |
 while read CUSTOMER_ID ;
 do
-   echo "VLAN for customer#$CUSTOMER_ID"
+   #echo "VLAN for customer#$CUSTOMER_ID"
 
    # we checking the numbers of ve per customer and performing vlans creation and subnet adjustments appropriatelly
 
    veNum=`psql im -c "SELECT COUNT(*) FROM ve WHERE customer_id = $CUSTOMER_ID" --no-align --quiet --tuples-only`
    case "$veNum" in
       "0")
+           echo "CASE 0 : $CUSTOMER_ID has: $veNum VEs"
 
 
 ################################################################################################################
@@ -36,10 +38,10 @@ do
 
       [1-4]*)
            #create_one_vlan
-           print "$CUSTOMER_ID has: $veNum VEs"
+           echo "CASE 1-4 $CUSTOMER_ID has: $veNum VEs"
 		;;
       [5-20]*)
-           print "$CUSTOMER_ID has: $veNum VEs"
+           echo "CASE 5-20 $CUSTOMER_ID has: $veNum VEs"
            #create_multiple_vlans
 		;;
    esac
