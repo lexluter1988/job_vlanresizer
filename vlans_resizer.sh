@@ -1,8 +1,6 @@
 #!/bin/bash
 
 # CONSTANTS
-# this is 4rd input parameter for script so that private_ip mask for ve will be as you with
-private_ip_mask=$4
 
 # this is for future modifications, to include logging
 LOG='/tmp/vlans_resizer/operations.log'
@@ -66,8 +64,9 @@ function update_net {
 IP_MIN=$1
 IP_MAX=$2
 SUBNET_MASK=$3
+PRIVATE_MASK=$4
 
-psql im -c "UPDATE nets SET ip_min='$IP_MIN',ip_max='$IP_MAX',subnet_mask='$SUBNET_MASK'"
+psql im -c "UPDATE nets SET ip_min='$IP_MIN',ip_max='$IP_MAX',subnet_mask='$SUBNET_MASK',mask='$PRIVATE_MASK'"
 
 }
 
@@ -369,10 +368,10 @@ do
   if [ "$TECHNOLOGY" == "VM" ]
       then
       echo "prlctl set $VE_UUID --device-set net0 --ipdel all" >> '/tmp/vlans_resizer/scripts/'$HARDWARE_NAME.sh
-      echo "prlctl set $VE_UUID --device-set net0 --ipadd $PRIVATE_IP/$private_ip_mask" >> '/tmp/vlans_resizer/scripts/'$HARDWARE_NAME.sh
+      echo "prlctl set $VE_UUID --device-set net0 --ipadd $PRIVATE_IP" >> '/tmp/vlans_resizer/scripts/'$HARDWARE_NAME.sh
   else
       echo "prlctl set $VE_UUID --device-set venet0 --ipdel all" >> '/tmp/vlans_resizer/scripts/'$HARDWARE_NAME.sh
-      echo "prlctl set $VE_UUID --device-set venet0 --ipadd $PRIVATE_IP/$private_ip_mask" >> '/tmp/vlans_resizer/scripts/'$HARDWARE_NAME.sh
+      echo "prlctl set $VE_UUID --device-set venet0 --ipadd $PRIVATE_IP" >> '/tmp/vlans_resizer/scripts/'$HARDWARE_NAME.sh
   fi
 done
 
@@ -396,10 +395,10 @@ do
   if [ "$TECHNOLOGY" == "VM" ]
       then
       echo "prlctl set $VE_UUID --device-set net0 --ipdel all" >> '/tmp/vlans_resizer/rollback/'$HARDWARE_NAME.sh
-      echo "prlctl set $VE_UUID --device-set net0 --ipadd $PRIVATE_IP/$old_private_ip_mask" >> '/tmp/vlans_resizer/rollback/'$HARDWARE_NAME.sh
+      echo "prlctl set $VE_UUID --device-set net0 --ipadd $PRIVATE_IP" >> '/tmp/vlans_resizer/rollback/'$HARDWARE_NAME.sh
   else
       echo "prlctl set $VE_UUID --device-set venet0 --ipdel all" >> '/tmp/vlans_resizer/rollback/'$HARDWARE_NAME.sh
-      echo "prlctl set $VE_UUID --device-set venet0 --ipadd $PRIVATE_IP/$old_private_ip_mask" >> '/tmp/vlans_resizer/rollback/'$HARDWARE_NAME.sh
+      echo "prlctl set $VE_UUID --device-set venet0 --ipadd $PRIVATE_IP" >> '/tmp/vlans_resizer/rollback/'$HARDWARE_NAME.sh
   fi
 done
 
