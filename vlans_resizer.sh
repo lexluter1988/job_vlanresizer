@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # CONSTANTS
+PRIVATE_MASK=$4
 
 # this is for future modifications, to include logging
 LOG='/tmp/vlans_resizer/operations.log'
@@ -64,7 +65,6 @@ function update_net {
 IP_MIN=$1
 IP_MAX=$2
 SUBNET_MASK=$3
-PRIVATE_MASK=$4
 
 psql im -c "UPDATE nets SET ip_min='$IP_MIN',ip_max='$IP_MAX',subnet_mask='$SUBNET_MASK',mask=$PRIVATE_MASK"
 
@@ -301,7 +301,7 @@ parse_ip_range
 psql im -c "SELECT id FROM ve where customer_id = $CUSTOMER_ID" --set ON_ERROR_STOP=on --no-align --quiet --tuples-only |
 while read VE_ID;
 do
-  psql im -c "UPDATE ve set private_ip ='$oct1.$oct2.$oct3.$(($oct4+$i))/$private_ip_mask' WHERE id = $VE_ID"
+  psql im -c "UPDATE ve set private_ip ='$oct1.$oct2.$oct3.$(($oct4+$i))/$PRIVATE_MASK' WHERE id = $VE_ID"
   let i=i+1
     if [ "$i" == 4 ]
        then
@@ -386,8 +386,6 @@ done
 # it checks technology and make appropriate commands for VE and CT
 
 function generate_rollback {
-
-old_private_ip_mask=`psql im -c "SELECT mask FROM nets" --no-align --quiet --tuples-only`
 
 psql im -F ' ' -c "SELECT ve.uuid,hn.name,templates.technology,ve.private_ip FROM ve INNER JOIN templates ON (ve.template_id=templates.id) INNER JOIN hn ON (ve.hn_id=hn.uuid)" --set ON_ERROR_STOP=on --no-align --quiet --tuples-only |
 while read VE_UUID HARDWARE_NAME TECHNOLOGY PRIVATE_IP;
