@@ -30,7 +30,7 @@ touch '/tmp/vlans_resizer/operations.log'
 
 function backup_im_database {
 
-pg_dump -Fc im | gzip > /tmp/vlans_resizer/backup/imdbBackup`date '+%Y%m%d%H'`.gz
+pg_dump -Fc im | gzip > /tmp/vlans_resizer/backup/imdbBackup`date '+%Y%m%d-%H:%M:%S'`.gz
 
 }
 
@@ -39,11 +39,16 @@ pg_dump -Fc im | gzip > /tmp/vlans_resizer/backup/imdbBackup`date '+%Y%m%d%H'`.g
 ################################################################################################################
 
 # function creates complete query to clean old subnets,vlans,vlans_advertised + restart sequences from 1
+# function performs w/a for KB126765 actions since db structure has been changed
+# we now have privnet_id field in ve table and NOT NULL constraint, which block subnets cleanup
+# so we removed it
 
 function purge_db {
 
 
 psql im << EOF
+            ALTER TABLE ve ALTER COLUMN privnet_id DROP NOT NULL;
+            UPDATE ve SET privnet_id = DEFAULT;
             DELETE FROM subnets;
             DELETE FROM vlans_advertised;
             DELETE FROM vlans;
@@ -51,6 +56,22 @@ psql im << EOF
             ALTER SEQUENCE private_subnets_id_seq RESTART WITH 1;
 EOF
 
+}
+
+################################################################################################################
+##########        FUNCTION TO TO RESTORE privnet_id FIELD IN TABLE ve                     ######################
+################################################################################################################
+
+# function performs post KB126765 actions since db structure has been changed
+
+function restore_privnet_id {
+
+psql im << EOF
+            UPDATE ONLY ve SET privnet_id = subnets.id
+            FROM subnets
+            WHERE host(ve.private_ip)::inet << subnets.ip;
+            ALTER TABLE ve ALTER COLUMN privnet_id SET NOT NULL;
+EOF
 }
 
 ################################################################################################################
@@ -459,7 +480,7 @@ do
            VLAN_ID=`create_vlan`
 
    # no need to update subnets when 0 VM-s for customer
-           let SUBNET_ID=SUBNET_ID+1
+           #let SUBNET_ID=SUBNET_ID+1
 		 ;;
 
 
@@ -482,4 +503,7 @@ echo "STAGE #9 - POST SCRIPTS GENERATION"
 generate_scripts
 echo "STAGE #9 - FINISHED"
 
+echo "STAGE #10 - UPDATE privnet_id in TABLE ve"
+restore_privnet_id
+echo "STAGE #10 - FINISHED"
 
