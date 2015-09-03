@@ -212,8 +212,6 @@ function assign_multiple_subnets {
 
 numSubnets=$(($veNum/4))
 
-echo "customer $CUSTOMER_ID with $veNum VES will got $numSubnets subnets for its vlan $VLAN_ID"
-
 rest=$(($veNum%4))
 
 capacity=$((4-$rest))
@@ -231,6 +229,9 @@ esac
 
 
 VLAN_ID=`create_vlan`
+
+echo "customer $CUSTOMER_ID with $veNum VES will got $numSubnets subnets for its vlan $VLAN_ID"
+
 IP_RANGE=`update_subnet 0 f0`
 
 update_private_ip
