@@ -66,7 +66,7 @@ IP_MAX=$2
 SUBNET_MASK=$3
 PRIVATE_MASK=$4
 
-psql im -c "UPDATE nets SET ip_min='$IP_MIN',ip_max='$IP_MAX',subnet_mask='$SUBNET_MASK',mask='$PRIVATE_MASK'"
+psql im -c "UPDATE nets SET ip_min='$IP_MIN',ip_max='$IP_MAX',subnet_mask='$SUBNET_MASK',mask=$PRIVATE_MASK"
 
 }
 
