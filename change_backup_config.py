@@ -1,8 +1,11 @@
 import psycopg2
 import psycopg2.extras
 import xml.etree.ElementTree as ET
+import sys
+from sys import stderr
 
 backup_id = 458
+
 
 class ChangeBackup(object):
     def __init__(self, connection=None):
@@ -21,8 +24,8 @@ class ChangeBackup(object):
             connection.close()
 
         except psycopg2.Error as e:
-            print e.pgerror
-            return 1
+            stderr.write(e.pgerror)
+            sys.exit(1)
 
         # next we getting dict of ve_config and taking uuid and private ip from there
         # this is xml object we can work with
@@ -46,8 +49,8 @@ class ChangeBackup(object):
             new_private_ip = new_private_ip[0]['private_ip']
 
         except psycopg2.Error as e:
-            print e.pgerror
-            return 1
+            stderr.write(e.pgerror)
+            sys.exit(1)
 
         # print ve_ref
         # print ve_uuid
@@ -75,8 +78,8 @@ class ChangeBackup(object):
             connection.close()
 
         except psycopg2.Error as e:
-            print e.pgerror
-            return 1
+            stderr.write(e.pgerror)
+            sys.exit(1)
 
 conn = ChangeBackup()
 conn.get_backup_config()
