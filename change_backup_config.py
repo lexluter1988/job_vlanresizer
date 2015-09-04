@@ -80,5 +80,8 @@ class ChangeBackup(object):
             print e.pgerror
             sys.exit(1)
 
+        print "VE: %s, changed its old ip: %s to the new ip: %s for backup_id: %s" \
+              % (ve_ref, ip_before, ip_after, backup_id)
+
 conn = ChangeBackup()
 conn.get_backup_config()
