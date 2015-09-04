@@ -60,7 +60,7 @@ class ChangeBackup(object):
             child.set('private-ip', new_private_ip)
             ip_after = child.get('private-ip')
             # print ip_after
-        new_xml_config = ET.tostring(root, encoding="utf8", method="xml")
+        new_xml_config = ET.tostring(root, encoding="utf8")
         new_xml_config = new_xml_config.replace('<?xml version=\'1.0\' encoding=\'utf8\'?>',
                                                 '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>')
         # print new_xml_config
