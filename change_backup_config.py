@@ -2,6 +2,8 @@ import psycopg2
 import psycopg2.extras
 import xml.etree.ElementTree as ET
 
+backup_id = 458
+
 class ChangeBackup(object):
     def __init__(self, connection=None):
         self.connection = connection
@@ -13,7 +15,7 @@ class ChangeBackup(object):
             connection = psycopg2.connect("dbname='im' user='postgres'",
                                           connection_factory=psycopg2.extras.RealDictConnection)
             cur = connection.cursor()
-            cur.execute("SELECT ve_ref, ve_config FROM ve_backups WHERE ve_ref IS NOT NULL limit 1")
+            cur.execute("SELECT ve_ref, ve_config FROM ve_backups WHERE ve_ref IS NOT NULL AND id = '%s'" % backup_id)
             configs = cur.fetchall()
             cur.close()
             connection.close()
@@ -66,7 +68,8 @@ class ChangeBackup(object):
             connection = psycopg2.connect("dbname='im' user='postgres'",
                                           connection_factory=psycopg2.extras.RealDictConnection)
             cur = connection.cursor()
-            cur.execute("UPDATE ve_backups SET ve_config = '%s' WHERE ve_ref = '%s';" % (new_xml_config, ve_ref))
+            cur.execute("UPDATE ve_backups SET ve_config = '%s' "
+                        "WHERE ve_ref = '%s' AND id = '%s';" % (new_xml_config, ve_ref, backup_id))
             connection.commit()
             cur.close()
             connection.close()
