@@ -28,7 +28,7 @@ class ChangeBackup(object):
         # this is xml object we can work with
         ve_ref = configs[0]['ve_ref']
         xml_config = configs[0]['ve_config']
-        print xml_config
+        # print xml_config
 
         # it also our root of xml, comparing with reading from file
         root = ET.fromstring(xml_config)
@@ -49,19 +49,19 @@ class ChangeBackup(object):
             print e.pgerror
             return 1
 
-        print ve_ref
-        print ve_uuid
-        print new_private_ip
+        # print ve_ref
+        # print ve_uuid
+        # print new_private_ip
         for child in root.findall('network'):
             ip_before = child.get('private-ip')
-            print ip_before
+            # print ip_before
             child.set('private-ip', new_private_ip)
             ip_after = child.get('private-ip')
-            print ip_after
+            # print ip_after
         new_xml_config = ET.tostring(root, encoding="utf8", method="xml")
         new_xml_config = new_xml_config.replace('<?xml version=\'1.0\' encoding=\'utf8\'?>',
                                                 '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>')
-        print new_xml_config
+        # print new_xml_config
 
         # last connection to db to update ve_backups ve_configration with new ip
         try:
