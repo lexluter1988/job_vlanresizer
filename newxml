@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ve>
+    <id>12688</id>
+    <uuid>05106c1e-d192-4709-bf4a-ef5addf30d51</uuid>
+    <hnId>6868</hnId>
+    <customer-id>1013408</customer-id>
+    <name>community–docker</name>
+    <hostname>community–docker</hostname>
+    <subscription-id>1035349</subscription-id>
+    <cpu number="1" power="2200"/>
+    <ram-size>1024</ram-size>
+    <bandwidth>1048576</bandwidth>
+    <ve-disk storage-id="/pcs/1013408.community-docker.pvm/config.pvs" created="true" global-id="9456" id="0" type="pcs" size="20"/>
+    <platform>
+        <template-info name="vm-ubuntu-14.04-x86_64-docker"/>
+        <os-info type="linux-free" technology="VM" family="linux"/>
+    </platform>
+    <network private-ip="10.128.142.16/8">
+        <public-ip chunk-ref="8" id="13123" address="109.120.187.231/23" gateway="109.120.186.1"/>
+    </network>
+    <console>
+        <address>109.120.185.252</address>
+        <port>5835</port>
+    </console>
+    <state>DELETED</state>
+    <primary-disk-id>0</primary-disk-id>
+    <template-id>268</template-id>
+    <admin login="root"/>
+    <steady-state>DELETED</steady-state>
+    <current-resource-consumption disk="0">
+        <private-traffic sent="0" received="0"/>
+        <public-traffic sent="48972541" received="269371079"/>
+    </current-resource-consumption>
+</ve>
