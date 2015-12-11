@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# gavno
 # CONSTANTS
 PRIVATE_MASK=$4
 
